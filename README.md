@@ -1,1 +1,2 @@
-# cocos-ts-demo
+# tsdemo
+ts demo new project template.
