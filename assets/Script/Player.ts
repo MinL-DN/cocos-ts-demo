@@ -10,41 +10,40 @@ const {ccclass, property} = cc._decorator;
 @ccclass
 export default class PLAYER extends cc.Component {
 
-    // @property(cc.Label)
-    // label: cc.Label = null;
-
-    // 跳跃音效资源
-    @property(cc.AudioClip)
-    jumpAudio: cc.AudioClip;
-
-    // 主角跳跃高度
-    @property
-    jumpHeight: number = 0;
-    // 主角跳跃持续时间
-    @property
-    jumpDuration: number = 0;
-    // 最大移动速度
-    @property
-    maxMoveSpeed: number = 0;
-    // 加速度
-    @property
-    accel: number = 0;
+    @property({type:cc.AudioClip}) jumpAudio: cc.AudioClip = null; // 跳跃音效资源
+    @property jumpHeight: number = 180; // 主角跳跃高度
+    @property jumpDuration: number = 0.3; // 主角跳跃持续时间
+    @property maxMoveSpeed: number = 550; // 最大移动速度
+    @property accel: number = 450; // 加速度
 
     jumpAction: cc.ActionInterval;
     accLeft = false;
     accRight = false;
-
-    // 主角当前水平方向速度
-    xSpeed = 0;
+    xSpeed = 0; // 主角当前水平方向速度
 
     onLoad() {
+
+        this.enabled = false;
+
         // 初始化跳跃动作
-        this.jumpAction = this.setJumpAction();
-        this.node.runAction(this.jumpAction);
+        // this.jumpAction = this.setJumpAction();
+        // this.node.runAction(this.jumpAction);
 
         // 初始化键盘输入监听
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
+
+        // 初始化点击事件
+        var touchReceiver = cc.Canvas.instance.node;
+        touchReceiver.on('touchstart', this.onTouchStart, this);
+        touchReceiver.on('touchend', this.onTouchEnd, this);
+    }
+
+    startMoveAt (pos: cc.Vec2) {
+        this.enabled = true;
+        this.xSpeed = 0;
+        this.node.setPosition(pos);
+        this.node.runAction(this.setJumpAction());
     }
 
     setJumpAction() {
@@ -63,6 +62,15 @@ export default class PLAYER extends cc.Component {
     playJumpSound () {
         // 调用声音引擎播放声音
         cc.audioEngine.playEffect(this.jumpAudio, false);
+    }
+
+    getCenterPos () {
+        var centerPos = cc.v2(this.node.x, this.node.y + this.node.height/2);
+        return centerPos;
+    }
+
+    stopMove () {
+        this.node.stopAllActions();
     }
 
     onKeyDown (event) {
@@ -89,6 +97,22 @@ export default class PLAYER extends cc.Component {
         }
     }
 
+    onTouchStart (event) {
+        var touchLoc = event.getLocation();
+        if (touchLoc.x >= cc.winSize.width/2) {
+            this.accLeft = false;
+            this.accRight = true;
+        } else {
+            this.accLeft = true;
+            this.accRight = false;
+        }
+    }
+
+    onTouchEnd (event) {
+        this.accLeft = false;
+        this.accRight = false;
+    }
+
     update (dt) {
         // 根据当前加速度方向每帧更新速度
         if (this.accLeft) {
@@ -104,11 +128,25 @@ export default class PLAYER extends cc.Component {
 
         // 根据当前速度更新主角的位置
         this.node.x += this.xSpeed * dt;
+
+        // limit player position inside screen
+        if ( this.node.x > this.node.parent.width/2) {
+            this.node.x = this.node.parent.width/2;
+            this.xSpeed = 0;
+        } else if (this.node.x < -this.node.parent.width/2) {
+            this.node.x = -this.node.parent.width/2;
+            this.xSpeed = 0;
+        }
     }
 
     onDestroy () {
         // 取消键盘输入监听
         cc.systemEvent.off(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         cc.systemEvent.off(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
+
+        // 取消事件
+        var touchReceiver = cc.Canvas.instance.node;
+        touchReceiver.off('touchstart', this.onTouchStart, this);
+        touchReceiver.off('touchend', this.onTouchEnd, this);
     }
 }

@@ -2,6 +2,10 @@
   "collision-matrix": [
     [
       true
+    ],
+    [
+      false,
+      false
     ]
   ],
   "excluded-modules": [
@@ -10,7 +14,8 @@
     "3D Particle"
   ],
   "group-list": [
-    "default"
+    "default",
+    ""
   ],
   "start-scene": "19159d63-3dde-4bd0-9651-f6f8c2e1a880",
   "design-resolution-width": 960,

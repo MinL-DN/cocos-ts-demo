@@ -12,22 +12,22 @@ import Game from './Game';
 @ccclass
 export default class STAR extends cc.Component {
 
-    @property
-    pickRadius: number = 0;
-
     game: Game;
 
-    // LIFE-CYCLE CALLBACKS:
+    @property pickRadius: number = 0;
 
-    // onLoad () {}
+    onLoad () {
+        this.enabled = false;
+    }
 
-    start () {
-
+    init (game: Game) {
+        this.enabled = true;
+        this.game = game;
     }
 
     getPlayerDistance () {
         // 根据 player 节点位置判断距离
-        var playerPos = this.game.player.getPosition();
+        var playerPos = this.game.player.getCenterPos();
         // 根据两点位置计算两点之间距离
         var dist = this.node.getPosition().sub(playerPos).mag();
         return dist;
@@ -35,11 +35,8 @@ export default class STAR extends cc.Component {
 
     onPicked () {
         // 当星星被收集时，调用 Game 脚本中的接口，生成一个新的星星
-        this.game.spawnNewStar();
-        // 然后销毁当前星星节点
-        this.node.destroy();
-
-        this.game.gainScore();
+        this.game.gainScore(this.node.getPosition());
+        this.game.despawnStar(this.node);
     }
 
     update (dt) {
